@@ -15,7 +15,7 @@ A self-contained demo that shows **structured logging, distributed tracing, and 
 | **Structured arguments** (L6) | `applicationId`, `count` etc. as searchable JSON fields — not embedded in the message string |
 | **action/state pattern** (L7) | `action=createApplication, state=initiated/succeeded` in every service log entry |
 | **HTTP access log** (L-HTTP) | Every request logged with `method`, `path`, `status`, `duration_ms` as JSON fields |
-| **Database query log** (L-DB) | Hibernate SQL queries visible in logs (debug level — demo only) |
+| **Database queries** | OTel Java agent auto-instruments JDBC — SQL spans with duration appear in Tempo, linked to the parent HTTP span. No log noise. |
 | **Distributed traces** | OTel Java agent (v2.26.1) auto-instruments the JVM; traces viewable in Tempo with log correlation |
 | **Metrics** | JVM, HikariCP, and HTTP metrics scraped by Prometheus and visualised in Grafana |
 
@@ -149,7 +149,7 @@ This demo is a concrete implementation of the following items from the observabi
 | L7 | `action`/`state` log pattern | `ApplicationServiceBehavior` |
 | L8 | Fixed `logger.warn(ex.getMessage(), ex)` anti-pattern | `ApplicationServiceBehavior`, `ApplicationDetailServiceBehavior` v4 |
 | L-HTTP | HTTP access logging filter (`method`, `path`, `status`, `duration_ms`) | `RequestLoggingFilter` |
-| L-DB | Hibernate SQL query logging (demo-only, not for production) | `application.properties` |
+| L-DB (removed) | ~~Hibernate SQL logging~~ — superseded by OTel JDBC auto-instrumentation (SQL spans in Tempo) | — |
 
 Tracing is provided by the **OTel Java agent** (v2.26.1) — zero code changes, production-grade auto-instrumentation.
 
