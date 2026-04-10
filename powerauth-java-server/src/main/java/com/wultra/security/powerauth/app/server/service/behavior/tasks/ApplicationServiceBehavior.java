@@ -39,7 +39,10 @@ import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfiguration;
 import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationException;
 import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationSerializer;
 import com.wultra.security.powerauth.crypto.lib.v4.model.context.SharedSecretAlgorithm;
-import lombok.AllArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +61,6 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
  */
 @Service
 @Slf4j
-@AllArgsConstructor
 public class ApplicationServiceBehavior {
 
     private final MasterKeyGenerationService masterKeyGenerationService;
@@ -67,8 +69,31 @@ public class ApplicationServiceBehavior {
     private final ApplicationVersionRepository applicationVersionRepository;
     private final AlgorithmQueryService algorithmQueryService;
     private final MasterPublicKeyService masterPublicKeyService;
+    private final Tracer tracer;
+    private final Counter applicationsCreatedCounter;
 
     private final KeyGenerator KEY_GENERATOR = new KeyGenerator();
+
+    public ApplicationServiceBehavior(
+            MasterKeyGenerationService masterKeyGenerationService,
+            LocalizationProvider localizationProvider,
+            ApplicationRepository applicationRepository,
+            ApplicationVersionRepository applicationVersionRepository,
+            AlgorithmQueryService algorithmQueryService,
+            MasterPublicKeyService masterPublicKeyService,
+            Tracer tracer,
+            MeterRegistry meterRegistry) {
+        this.masterKeyGenerationService = masterKeyGenerationService;
+        this.localizationProvider = localizationProvider;
+        this.applicationRepository = applicationRepository;
+        this.applicationVersionRepository = applicationVersionRepository;
+        this.algorithmQueryService = algorithmQueryService;
+        this.masterPublicKeyService = masterPublicKeyService;
+        this.tracer = tracer;
+        this.applicationsCreatedCounter = Counter.builder("powerauth.applications.created")
+                .description("Total number of PowerAuth applications created")
+                .register(meterRegistry);
+    }
 
     /**
      * Lookup application based on version app key.
@@ -148,6 +173,9 @@ public class ApplicationServiceBehavior {
 
             logger.info("action=createApplication, state=initiated", kv("applicationId", applicationId));
 
+            final Span span = tracer.nextSpan().name("createApplication").start();
+            try (Tracer.SpanInScope ignored = tracer.withSpan(span.tag("applicationId", applicationId))) {
+
             // Check application duplicity
             if (applicationRepository.findById(applicationId).isPresent()) {
                 throw localizationProvider.buildExceptionForCode(ServiceError.DUPLICATE_APPLICATION);
@@ -197,8 +225,14 @@ public class ApplicationServiceBehavior {
             ver.setSupported(version.getSupported());
             response.getVersions().add(ver);
 
+            applicationsCreatedCounter.increment();
             logger.info("action=createApplication, state=succeeded", kv("applicationId", application.getId()));
+            span.tag("state", "succeeded");
             return response;
+
+            } finally {
+                span.end();
+            }
         } catch (CryptoProviderException ex) {
             logger.error("Cryptography provider is not initialized correctly", ex);
             // Rollback is not required, exception can be triggered only before database is used for writing
