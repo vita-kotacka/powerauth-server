@@ -43,6 +43,8 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,6 +62,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class ApplicationServiceBehavior {
 
@@ -70,27 +73,15 @@ public class ApplicationServiceBehavior {
     private final AlgorithmQueryService algorithmQueryService;
     private final MasterPublicKeyService masterPublicKeyService;
     private final Tracer tracer;
-    private final Counter applicationsCreatedCounter;
+    private final MeterRegistry meterRegistry;
 
     private final KeyGenerator KEY_GENERATOR = new KeyGenerator();
 
-    public ApplicationServiceBehavior(
-            MasterKeyGenerationService masterKeyGenerationService,
-            LocalizationProvider localizationProvider,
-            ApplicationRepository applicationRepository,
-            ApplicationVersionRepository applicationVersionRepository,
-            AlgorithmQueryService algorithmQueryService,
-            MasterPublicKeyService masterPublicKeyService,
-            Tracer tracer,
-            MeterRegistry meterRegistry) {
-        this.masterKeyGenerationService = masterKeyGenerationService;
-        this.localizationProvider = localizationProvider;
-        this.applicationRepository = applicationRepository;
-        this.applicationVersionRepository = applicationVersionRepository;
-        this.algorithmQueryService = algorithmQueryService;
-        this.masterPublicKeyService = masterPublicKeyService;
-        this.tracer = tracer;
-        this.applicationsCreatedCounter = Counter.builder("powerauth.applications.created")
+    private Counter applicationsCreatedCounter;
+
+    @PostConstruct
+    void initMetrics() {
+        applicationsCreatedCounter = Counter.builder("powerauth.applications.created")
                 .description("Total number of PowerAuth applications created")
                 .register(meterRegistry);
     }
