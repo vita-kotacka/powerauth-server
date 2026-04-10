@@ -44,6 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Behavior class implementing application detail endpoint.
  *
@@ -71,8 +73,11 @@ public class ApplicationDetailServiceBehavior {
     public GetApplicationDetailResponse getApplicationDetail(GetApplicationDetailRequest request) throws GenericServiceException {
         try {
             final String applicationId = request.getApplicationId();
+            logger.info("action=getApplicationDetail, state=initiated", kv("applicationId", applicationId));
             final ApplicationEntity application = findApplicationById(applicationId);
-            return createApplicationDetailResponse(application);
+            final GetApplicationDetailResponse response = createApplicationDetailResponse(application);
+            logger.info("action=getApplicationDetail, state=succeeded", kv("applicationId", applicationId));
+            return response;
         } catch (GenericServiceException ex) {
             // already logged
             throw ex;
@@ -125,7 +130,7 @@ public class ApplicationDetailServiceBehavior {
             }
             return response;
         } catch (SdkConfigurationException exception) {
-            logger.warn(exception.getMessage(), exception);
+            logger.warn("SDK configuration is invalid", exception);
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_APPLICATION);
         }
     }

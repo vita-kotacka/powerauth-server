@@ -48,6 +48,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Behavior class implementing the application management related processes. The class separates the
  * logic from the main service class.
@@ -109,6 +111,7 @@ public class ApplicationServiceBehavior {
     @Transactional
     public GetApplicationListResponse getApplicationList() throws GenericServiceException {
         try {
+            logger.info("action=getApplicationList, state=initiated");
             final Iterable<ApplicationEntity> result = applicationRepository.findAll();
 
             final GetApplicationListResponse response = new GetApplicationListResponse();
@@ -120,6 +123,7 @@ public class ApplicationServiceBehavior {
                 response.getApplications().add(app);
             }
 
+            logger.info("action=getApplicationList, state=succeeded", kv("count", response.getApplications().size()));
             return response;
         } catch (RuntimeException ex) {
             logger.error("Runtime exception or error occurred, transaction will be rolled back", ex);
@@ -141,6 +145,8 @@ public class ApplicationServiceBehavior {
     public CreateApplicationResponse createApplication(CreateApplicationRequest request) throws GenericServiceException {
         try {
             final String applicationId = request.getApplicationId();
+
+            logger.info("action=createApplication, state=initiated", kv("applicationId", applicationId));
 
             // Check application duplicity
             if (applicationRepository.findById(applicationId).isPresent()) {
@@ -191,13 +197,14 @@ public class ApplicationServiceBehavior {
             ver.setSupported(version.getSupported());
             response.getVersions().add(ver);
 
+            logger.info("action=createApplication, state=succeeded", kv("applicationId", application.getId()));
             return response;
         } catch (CryptoProviderException ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error("Cryptography provider is not initialized correctly", ex);
             // Rollback is not required, exception can be triggered only before database is used for writing
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_CRYPTO_PROVIDER);
         } catch (SdkConfigurationException ex) {
-            logger.warn(ex.getMessage(), ex);
+            logger.warn("SDK configuration is invalid", ex);
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_APPLICATION);
         } catch (GenericServiceException ex) {
             // already logged
