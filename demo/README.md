@@ -41,7 +41,11 @@ A self-contained demo that shows **structured logging, distributed tracing, and 
 
 The script will:
 1. Check prerequisites
-2. Download the OTel Java agent JAR into `demo/agents/`
+2. Download the OTel Java agent JAR into `demo/agents/` (or download manually):
+   ```bash
+   curl -Lo demo/agents/opentelemetry-javaagent.jar \
+     https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.26.1/opentelemetry-javaagent.jar
+   ```
 3. Build the PowerAuth Server WAR (`mvn package -DskipTests`)
 4. Start the full stack via Docker Compose
 5. Wait for the server to become healthy
