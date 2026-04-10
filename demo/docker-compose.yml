@@ -1,0 +1,114 @@
+services:
+
+  # ── Database ────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: powerauth
+      POSTGRES_USER: powerauth
+      POSTGRES_PASSWORD: powerauth
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U powerauth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── PowerAuth Server ────────────────────────────────────────────────────────
+  powerauth-server:
+    build:
+      context: ..
+      dockerfile: powerauth-java-server/docker/Dockerfile
+    environment:
+      POWERAUTH_SERVER_DATASOURCE_URL: jdbc:postgresql://postgres:5432/powerauth
+      POWERAUTH_SERVER_DATASOURCE_USERNAME: powerauth
+      POWERAUTH_SERVER_DATASOURCE_PASSWORD: powerauth
+      LOGBACK_CONF: /opt/logback/conf
+      # OTel Java agent — production-grade auto-instrumentation
+      JAVA_OPTS: >-
+        -javaagent:/agents/opentelemetry-javaagent.jar
+        -Dotel.service.name=powerauth-java-server
+        -Dotel.exporter.otlp.endpoint=http://tempo:4318
+        -Dotel.exporter.otlp.protocol=http/protobuf
+        -Dotel.metrics.exporter=none
+        -Dotel.logs.exporter=none
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./agents:/agents:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+
+  # ── Grafana Loki (log storage) ───────────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.4.2
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./config/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+
+  # ── Promtail (log shipper: Docker → Loki) ───────────────────────────────────
+  promtail:
+    image: grafana/promtail:3.4.2
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./config/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+
+  # ── Grafana Tempo (trace storage) ────────────────────────────────────────────
+  tempo:
+    image: grafana/tempo:2.7.2
+    command: -config.file=/etc/tempo/tempo.yml
+    volumes:
+      - ./config/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP API + Grafana datasource
+      - "4318:4318"   # OTLP HTTP ingest (from app)
+
+  # ── Prometheus (metrics storage) ─────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  # ── Grafana (visualization) ──────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.6.1
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+      - tempo
+      - prometheus
+
+volumes:
+  postgres-data:
+  loki-data:
+  tempo-data:
+  prometheus-data:
+  grafana-data:
