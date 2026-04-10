@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.wultra.security.powerauth.crypto.lib.enums.EcCurve;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
-import com.wultra.security.powerauth.crypto.lib.model.exception.GenericCryptoException;
 import com.wultra.security.powerauth.crypto.lib.util.KeyConvertor;
 
 import java.io.IOException;
@@ -72,7 +71,7 @@ public class PublicKeySerializer extends JsonSerializer<PublicKey> {
                 default:
                     throw new IOException("Unsupported algorithm: " + publicKey.getAlgorithm());
             }
-        } catch (CryptoProviderException | GenericCryptoException e) {
+        } catch (CryptoProviderException e) {
             throw new IOException("Public key conversion failed", e);
         }
     }
