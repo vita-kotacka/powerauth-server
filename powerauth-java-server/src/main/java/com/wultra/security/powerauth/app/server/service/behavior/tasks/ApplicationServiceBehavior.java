@@ -35,10 +35,9 @@ import com.wultra.security.powerauth.client.model.request.*;
 import com.wultra.security.powerauth.client.model.response.*;
 import com.wultra.security.powerauth.crypto.lib.generator.KeyGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfiguration;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationException;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationSerializer;
+import com.wultra.security.powerauth.app.server.service.model.SdkConfiguration;
 import com.wultra.security.powerauth.crypto.lib.v4.model.context.SharedSecretAlgorithm;
+import com.wultra.security.powerauth.app.server.service.util.SdkConfigurationSerializer;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.tracing.Span;
@@ -72,6 +71,7 @@ public class ApplicationServiceBehavior {
     private final ApplicationVersionRepository applicationVersionRepository;
     private final AlgorithmQueryService algorithmQueryService;
     private final MasterPublicKeyService masterPublicKeyService;
+    private final SdkConfigurationSerializer sdkConfigurationSerializer;
     private final Tracer tracer;
     private final MeterRegistry meterRegistry;
 
@@ -194,7 +194,7 @@ public class ApplicationServiceBehavior {
                     .masterPublicKeyMlDsa65(masterPublicKeys.mlDsa65())
                     .masterPublicKeyMlDsa87(masterPublicKeys.mlDsa87())
                     .build();
-            final String sdkConfigSerialized = SdkConfigurationSerializer.serialize(sdkConfig);
+            final String sdkConfigSerialized = sdkConfigurationSerializer.serialize(sdkConfig);
 
             // Create the default application version
             final ApplicationVersionEntity version = new ApplicationVersionEntity();
@@ -228,9 +228,6 @@ public class ApplicationServiceBehavior {
             logger.error("Cryptography provider is not initialized correctly", ex);
             // Rollback is not required, exception can be triggered only before database is used for writing
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_CRYPTO_PROVIDER);
-        } catch (SdkConfigurationException ex) {
-            logger.warn("SDK configuration is invalid", ex);
-            throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_APPLICATION);
         } catch (GenericServiceException ex) {
             // already logged
             throw ex;

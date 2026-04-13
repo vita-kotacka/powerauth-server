@@ -169,7 +169,7 @@ public abstract class EncryptionService {
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_REQUEST);
         }
         // Validate encrypted request (without request data)
-        if (!validateRequestData && !ENCRYPTOR_FACTORY.getRequestResponseValidator(protocolVersion).validateEncryptedRequestWithoutData(encryptedRequest)) {
+        if (!validateRequestData && !ENCRYPTOR_FACTORY.getRequestResponseValidator(protocolVersion).validateEncryptedRequest(encryptedRequest)) {
             logger.warn("Invalid encrypted request parameters (without request data)");
             // Rollback is not required, error occurs before writing to database
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_REQUEST);
