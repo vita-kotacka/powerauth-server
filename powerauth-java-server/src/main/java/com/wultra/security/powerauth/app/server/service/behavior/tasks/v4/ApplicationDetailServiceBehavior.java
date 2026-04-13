@@ -73,10 +73,10 @@ public class ApplicationDetailServiceBehavior {
     public GetApplicationDetailResponse getApplicationDetail(GetApplicationDetailRequest request) throws GenericServiceException {
         try {
             final String applicationId = request.getApplicationId();
-            logger.info("action=getApplicationDetail, state=initiated", kv("applicationId", applicationId));
+            logger.info("", kv("action", "getApplicationDetail"), kv("state", "initiated"), kv("applicationId", applicationId));
             final ApplicationEntity application = findApplicationById(applicationId);
             final GetApplicationDetailResponse response = createApplicationDetailResponse(application);
-            logger.info("action=getApplicationDetail, state=succeeded", kv("applicationId", applicationId));
+            logger.info("", kv("action", "getApplicationDetail"), kv("state", "succeeded"), kv("applicationId", applicationId));
             return response;
         } catch (GenericServiceException ex) {
             // already logged

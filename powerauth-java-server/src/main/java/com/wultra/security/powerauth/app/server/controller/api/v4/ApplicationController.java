@@ -66,10 +66,10 @@ public class ApplicationController {
      */
     @PostMapping("/list")
     public ObjectResponse<GetApplicationListResponse> getApplicationList() throws Exception {
-        logger.info("action: getApplicationList, state: initiated");
+        logger.info("", kv("action", "getApplicationList"), kv("state", "initiated"));
         logger.debug("action: getApplicationList, state: initiated, request: empty");
         final ObjectResponse<GetApplicationListResponse> response = new ObjectResponse<>(applicationService.getApplicationList());
-        logger.info("action: getApplicationList, state: succeeded");
+        logger.info("", kv("action", "getApplicationList"), kv("state", "succeeded"));
         logger.debug("action: getApplicationList, state: succeeded, response: {}", response);
         return response;
     }
@@ -84,10 +84,10 @@ public class ApplicationController {
     @PostMapping("/create")
     public ObjectResponse<CreateApplicationResponse> createApplication(@Valid @RequestBody ObjectRequest<CreateApplicationRequest> request) throws Exception {
         final CreateApplicationRequest req = request.getRequestObject();
-        logger.info("action: createApplication, state: initiated", kv("applicationId", req.getApplicationId()));
+        logger.info("", kv("action", "createApplication"), kv("state", "initiated"), kv("applicationId", req.getApplicationId()));
         logger.debug("action: createApplication, state: initiated", kv("applicationId", req.getApplicationId()), kv("request", request));
         final ObjectResponse<CreateApplicationResponse> response = new ObjectResponse<>(applicationService.createApplication(req));
-        logger.info("action: createApplication, state: succeeded", kv("applicationId", req.getApplicationId()));
+        logger.info("", kv("action", "createApplication"), kv("state", "succeeded"), kv("applicationId", req.getApplicationId()));
         logger.debug("action: createApplication, state: succeeded", kv("applicationId", req.getApplicationId()), kv("response", response));
         return response;
     }
@@ -102,10 +102,10 @@ public class ApplicationController {
     @PostMapping("/detail")
     public ObjectResponse<GetApplicationDetailResponse> getApplicationDetail(@Valid @RequestBody ObjectRequest<GetApplicationDetailRequest> request) throws Exception {
         final GetApplicationDetailRequest req = request.getRequestObject();
-        logger.info("action: getApplicationDetail, state: initiated", kv("applicationId", req.getApplicationId()));
+        logger.info("", kv("action", "getApplicationDetail"), kv("state", "initiated"), kv("applicationId", req.getApplicationId()));
         logger.debug("action: getApplicationDetail, state: initiated", kv("applicationId", req.getApplicationId()), kv("request", request));
         final ObjectResponse<GetApplicationDetailResponse> response = new ObjectResponse<>(applicationDetailService.getApplicationDetail(req));
-        logger.info("action: getApplicationDetail, state: succeeded", kv("applicationId", req.getApplicationId()));
+        logger.info("", kv("action", "getApplicationDetail"), kv("state", "succeeded"), kv("applicationId", req.getApplicationId()));
         logger.debug("action: getApplicationDetail, state: succeeded", kv("applicationId", req.getApplicationId()), kv("response", response));
         return response;
     }
@@ -120,10 +120,10 @@ public class ApplicationController {
     @PostMapping("/detail/version")
     public ObjectResponse<LookupApplicationByAppKeyResponse> lookupApplicationByAppKey(@Valid @RequestBody ObjectRequest<LookupApplicationByAppKeyRequest> request) throws Exception {
         final LookupApplicationByAppKeyRequest req = request.getRequestObject();
-        logger.info("action: lookupApplicationByAppKey, state: initiated", kv("applicationKey", req.getApplicationKey()));
+        logger.info("", kv("action", "lookupApplicationByAppKey"), kv("state", "initiated"), kv("applicationKey", req.getApplicationKey()));
         logger.debug("action: lookupApplicationByAppKey, state: initiated", kv("applicationKey", req.getApplicationKey()), kv("request", request));
         final ObjectResponse<LookupApplicationByAppKeyResponse> response = new ObjectResponse<>(applicationService.lookupApplicationByAppKey(req));
-        logger.info("action: lookupApplicationByAppKey, state: succeeded", kv("applicationKey", req.getApplicationKey()));
+        logger.info("", kv("action", "lookupApplicationByAppKey"), kv("state", "succeeded"), kv("applicationKey", req.getApplicationKey()));
         logger.debug("action: lookupApplicationByAppKey, state: succeeded", kv("applicationKey", req.getApplicationKey()), kv("response", response));
         return response;
     }
