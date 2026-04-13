@@ -32,8 +32,8 @@ import com.wultra.security.powerauth.app.server.service.model.ServiceError;
 import com.wultra.security.powerauth.client.model.entity.ApplicationVersion;
 import com.wultra.security.powerauth.client.model.request.GetApplicationDetailRequest;
 import com.wultra.security.powerauth.client.model.response.v3.GetApplicationDetailResponse;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfiguration;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationSerializer;
+import com.wultra.security.powerauth.app.server.service.model.SdkConfiguration;
+import com.wultra.security.powerauth.app.server.service.util.SdkConfigurationSerializer;
 import com.wultra.security.powerauth.crypto.lib.v4.model.context.SharedSecretAlgorithm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,6 +65,11 @@ class ApplicationDetailServiceBehaviorTest {
     private ApplicationRepository applicationRepository;
 
     @Mock
+    private SdkConfigurationSerializer sdkConfigurationSerializer;
+
+    private final SdkConfigurationSerializer realSerializer = new SdkConfigurationSerializer(null);
+
+    @Mock
     private MasterKeyPairRepository masterKeyPairRepository;
 
     @Mock
@@ -82,6 +87,12 @@ class ApplicationDetailServiceBehaviorTest {
     private static final String KEY_P256   = Base64.getEncoder().encodeToString("my-p256-key".getBytes());
     private static final String APP_KEY    = Base64.getEncoder().encodeToString("app-key".getBytes());
     private static final String APP_SECRET = Base64.getEncoder().encodeToString("app-secret".getBytes());
+
+    @BeforeEach
+    void stubSdkConfigurationSerializer() throws Exception {
+        lenient().when(sdkConfigurationSerializer.serialize(any()))
+                .thenAnswer(inv -> realSerializer.serialize(inv.getArgument(0)));
+    }
 
     @BeforeEach
     void stubMasterPublicKeyService() throws Exception {
@@ -213,7 +224,7 @@ class ApplicationDetailServiceBehaviorTest {
                 .appKey(APP_KEY)
                 .appSecret(APP_SECRET)
                 .build();
-        assertEquals(SdkConfigurationSerializer.serialize(sdkConfig), applicationDetail.getVersions().get(0).getMobileSdkConfig());
+        assertEquals(realSerializer.serialize(sdkConfig), applicationDetail.getVersions().get(0).getMobileSdkConfig());
     }
 
     @Test
@@ -239,7 +250,7 @@ class ApplicationDetailServiceBehaviorTest {
                 .appSecret(APP_SECRET)
                 .masterPublicKeyP256(KEY_P256)
                 .build();
-        assertEquals(SdkConfigurationSerializer.serialize(sdkConfig), applicationDetail.getVersions().get(0).getMobileSdkConfig());
+        assertEquals(realSerializer.serialize(sdkConfig), applicationDetail.getVersions().get(0).getMobileSdkConfig());
     }
 
     @Test
@@ -265,7 +276,7 @@ class ApplicationDetailServiceBehaviorTest {
                 .appKey(APP_KEY)
                 .appSecret(APP_SECRET)
                 .build();
-        assertEquals(SdkConfigurationSerializer.serialize(sdkConfig), applicationDetail.getVersions().get(0).getMobileSdkConfig());
+        assertEquals(realSerializer.serialize(sdkConfig), applicationDetail.getVersions().get(0).getMobileSdkConfig());
     }
 
     @Test
@@ -295,7 +306,7 @@ class ApplicationDetailServiceBehaviorTest {
                 .appSecret(APP_SECRET)
                 .masterPublicKeyP256(KEY_P256)
                 .build();
-        assertEquals(SdkConfigurationSerializer.serialize(sdkConfig), ver.getMobileSdkConfig());
+        assertEquals(realSerializer.serialize(sdkConfig), ver.getMobileSdkConfig());
     }
 
     @Test

@@ -53,8 +53,8 @@ import com.wultra.security.powerauth.crypto.lib.enums.EcCurve;
 import com.wultra.security.powerauth.crypto.lib.generator.KeyGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
 import com.wultra.security.powerauth.crypto.lib.model.exception.GenericCryptoException;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfiguration;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationSerializer;
+import com.wultra.security.powerauth.app.server.service.model.SdkConfiguration;
+import com.wultra.security.powerauth.app.server.service.util.SdkConfigurationSerializer;
 import com.wultra.security.powerauth.crypto.lib.util.KeyConvertor;
 import com.wultra.security.powerauth.crypto.lib.v4.api.PqcDsa;
 import com.wultra.security.powerauth.crypto.lib.v4.api.PqcDsaKeyConvertor;
@@ -118,11 +118,11 @@ class TemporaryKeyBehaviorTest {
     private final ActivationCreateServiceBehavior activationServiceBehaviorV4;
     private final ActivationRepository activationRepository;
     private final KeyProvider keyProvider;
-
     private final TemporaryKeyTestService temporaryKeyTestService;
+    private final SdkConfigurationSerializer sdkConfigurationSerializer;
 
     @Autowired
-    TemporaryKeyBehaviorTest(TemporaryKeyBehaviorAead temporaryKeyBehavior, ApplicationServiceBehavior applicationServiceBehavior, ApplicationDetailServiceBehavior applicationDetailServiceBehavior, ActivationServiceBehavior activationServiceBehavior, ActivationCreateServiceBehavior activationServiceBehaviorV4, ActivationRepository activationRepository, KeyProvider keyProvider, TemporaryKeyTestService temporaryKeyTestService) {
+    TemporaryKeyBehaviorTest(TemporaryKeyBehaviorAead temporaryKeyBehavior, ApplicationServiceBehavior applicationServiceBehavior, ApplicationDetailServiceBehavior applicationDetailServiceBehavior, ActivationServiceBehavior activationServiceBehavior, ActivationCreateServiceBehavior activationServiceBehaviorV4, ActivationRepository activationRepository, KeyProvider keyProvider, TemporaryKeyTestService temporaryKeyTestService, SdkConfigurationSerializer sdkConfigurationSerializer) {
         this.temporaryKeyBehavior = temporaryKeyBehavior;
         this.applicationServiceBehavior = applicationServiceBehavior;
         this.applicationDetailServiceBehavior = applicationDetailServiceBehavior;
@@ -131,6 +131,7 @@ class TemporaryKeyBehaviorTest {
         this.activationRepository = activationRepository;
         this.keyProvider = keyProvider;
         this.temporaryKeyTestService = temporaryKeyTestService;
+        this.sdkConfigurationSerializer = sdkConfigurationSerializer;
     }
 
     @Test
@@ -433,7 +434,7 @@ class TemporaryKeyBehaviorTest {
 
     private PublicKey getMasterPublicEcKey(ApplicationVersion applicationVersion) throws Exception {
         final String mobileSdkConfig = applicationVersion.getMobileSdkConfig();
-        final SdkConfiguration sdkConfiguration = SdkConfigurationSerializer.deserialize(mobileSdkConfig);
+        final SdkConfiguration sdkConfiguration = sdkConfigurationSerializer.deserialize(mobileSdkConfig);
         final String masterPublicKeyBase64 = Objects.requireNonNull(sdkConfiguration).masterPublicKeyP384();
         final byte[] masterPublicKeyBytes = Base64.getDecoder().decode(masterPublicKeyBase64);
         return KEY_CONVERTOR_EC.convertBytesToPublicKey(EcCurve.P384, masterPublicKeyBytes);
@@ -441,7 +442,7 @@ class TemporaryKeyBehaviorTest {
 
     private PublicKey getMasterPublicPqcKey(ApplicationVersion applicationVersion) throws Exception {
         final String mobileSdkConfig = applicationVersion.getMobileSdkConfig();
-        final SdkConfiguration sdkConfiguration = SdkConfigurationSerializer.deserialize(mobileSdkConfig);
+        final SdkConfiguration sdkConfiguration = sdkConfigurationSerializer.deserialize(mobileSdkConfig);
         final String masterPublicKeyBase64 = Objects.requireNonNull(sdkConfiguration).masterPublicKeyMlDsa65();
         final byte[] masterPublicKeyBytes = Base64.getDecoder().decode(masterPublicKeyBase64);
         return KEY_CONVERTOR_PQC_DSA.convertBytesToPublicKey(masterPublicKeyBytes);

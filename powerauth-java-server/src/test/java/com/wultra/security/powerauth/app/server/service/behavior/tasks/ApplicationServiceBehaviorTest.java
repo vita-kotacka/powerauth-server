@@ -30,9 +30,13 @@ import com.wultra.security.powerauth.app.server.service.i18n.LocalizationProvide
 import com.wultra.security.powerauth.app.server.service.model.ServiceError;
 import com.wultra.security.powerauth.client.model.request.CreateApplicationRequest;
 import com.wultra.security.powerauth.client.model.response.CreateApplicationResponse;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfiguration;
-import com.wultra.security.powerauth.crypto.lib.sdk.SdkConfigurationSerializer;
+import com.wultra.security.powerauth.app.server.service.model.SdkConfiguration;
+import com.wultra.security.powerauth.app.server.service.util.SdkConfigurationSerializer;
 import com.wultra.security.powerauth.crypto.lib.v4.model.context.SharedSecretAlgorithm;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +45,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.Security;
@@ -67,6 +72,11 @@ class ApplicationServiceBehaviorTest {
     private LocalizationProvider localizationProvider;
 
     @Mock
+    private SdkConfigurationSerializer sdkConfigurationSerializer;
+
+    private final SdkConfigurationSerializer realSerializer = new SdkConfigurationSerializer(null);
+
+    @Mock
     private ApplicationRepository applicationRepository;
 
     @Mock
@@ -78,6 +88,18 @@ class ApplicationServiceBehaviorTest {
     @Mock
     private MasterPublicKeyService masterPublicKeyService;
 
+    @Mock
+    private Tracer tracer;
+
+    @Mock
+    private Span span;
+
+    @Mock
+    private Tracer.SpanInScope spanInScope;
+
+    @Spy
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     @InjectMocks
     private ApplicationServiceBehavior applicationServiceBehavior;
 
@@ -86,6 +108,22 @@ class ApplicationServiceBehaviorTest {
         if (Security.getProvider("BC") == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
+    }
+
+    @BeforeEach
+    void stubSdkConfigurationSerializer() throws Exception {
+        lenient().when(sdkConfigurationSerializer.serialize(any()))
+                .thenAnswer(inv -> realSerializer.serialize(inv.getArgument(0)));
+    }
+
+    @BeforeEach
+    void stubTracer() {
+        lenient().when(tracer.nextSpan()).thenReturn(span);
+        lenient().when(span.name(any())).thenReturn(span);
+        lenient().when(span.start()).thenReturn(span);
+        lenient().when(span.tag(any(), any())).thenReturn(span);
+        lenient().when(tracer.withSpan(any())).thenReturn(spanInScope);
+        applicationServiceBehavior.initMetrics();
     }
 
     @BeforeEach
@@ -138,7 +176,7 @@ class ApplicationServiceBehaviorTest {
                 .appSecret(ver.getApplicationSecret())
                 .masterPublicKeyP256(Base64.getEncoder().encodeToString("p256Key".getBytes()))
                 .build();
-        assertEquals(SdkConfigurationSerializer.serialize(sdkConfig), ver.getMobileSdkConfig());
+        assertEquals(realSerializer.serialize(sdkConfig), ver.getMobileSdkConfig());
     }
 
     @Test
