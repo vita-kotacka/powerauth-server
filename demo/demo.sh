@@ -108,6 +108,25 @@ cd "$SCRIPT_DIR"
 docker compose up -d --build
 success "All containers started"
 
+# ── 4a. Initialize database schema ────────────────────────────────────────────
+header "Initializing database schema"
+info "Waiting for PostgreSQL to be ready..."
+until docker compose exec -T postgres pg_isready -U powerauth -q; do
+    echo -n "."
+    sleep 2
+done
+echo ""
+
+# Only run schema init if tables don't exist yet
+TABLE_COUNT=$(docker compose exec -T postgres psql -U powerauth -d powerauth -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='pa_application'" 2>/dev/null || echo "0")
+if [[ "$TABLE_COUNT" == "0" ]]; then
+    docker compose exec -T postgres psql -U powerauth -d powerauth \
+        < "$REPO_ROOT/docs/sql/postgresql/create_schema.sql" > /dev/null 2>&1
+    success "Schema created"
+else
+    success "Schema already initialized — skipping"
+fi
+
 # ── 5. Wait for PowerAuth Server ──────────────────────────────────────────────
 header "Waiting for PowerAuth Server to be ready"
 info "Health endpoint: $PAS_BASE_URL/actuator/health"

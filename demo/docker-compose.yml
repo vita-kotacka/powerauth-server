@@ -25,6 +25,8 @@ services:
       POWERAUTH_SERVER_DATASOURCE_USERNAME: powerauth
       POWERAUTH_SERVER_DATASOURCE_PASSWORD: powerauth
       LOGBACK_CONF: /opt/logback/conf
+      # Required since 2.1.0: 256-bit Base64 master DB encryption key (demo-only value)
+      POWERAUTH_SERVER_DB_MASTER_ENCRYPTION_AEAD_KMAC_KEY: "C3zG4Uv+GsrO/E/mVVg1FVeA36ROiWNNYZm7flbawRM="
       # OTel Java agent — production-grade auto-instrumentation
       JAVA_OPTS: >-
         -javaagent:/agents/opentelemetry-javaagent.jar
