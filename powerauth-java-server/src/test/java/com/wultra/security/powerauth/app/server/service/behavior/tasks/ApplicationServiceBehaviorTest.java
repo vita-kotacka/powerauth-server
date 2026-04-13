@@ -74,7 +74,7 @@ class ApplicationServiceBehaviorTest {
     @Mock
     private SdkConfigurationSerializer sdkConfigurationSerializer;
 
-    private final SdkConfigurationSerializer realSerializer = new SdkConfigurationSerializer(null);
+    private SdkConfigurationSerializer realSerializer;
 
     @Mock
     private ApplicationRepository applicationRepository;
@@ -112,6 +112,7 @@ class ApplicationServiceBehaviorTest {
 
     @BeforeEach
     void stubSdkConfigurationSerializer() throws Exception {
+        realSerializer = new SdkConfigurationSerializer(localizationProvider);
         lenient().when(sdkConfigurationSerializer.serialize(any()))
                 .thenAnswer(inv -> realSerializer.serialize(inv.getArgument(0)));
     }

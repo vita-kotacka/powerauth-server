@@ -67,7 +67,7 @@ class ApplicationDetailServiceBehaviorTest {
     @Mock
     private SdkConfigurationSerializer sdkConfigurationSerializer;
 
-    private final SdkConfigurationSerializer realSerializer = new SdkConfigurationSerializer(null);
+    private SdkConfigurationSerializer realSerializer;
 
     @Mock
     private MasterKeyPairRepository masterKeyPairRepository;
@@ -90,6 +90,7 @@ class ApplicationDetailServiceBehaviorTest {
 
     @BeforeEach
     void stubSdkConfigurationSerializer() throws Exception {
+        realSerializer = new SdkConfigurationSerializer(localizationProvider);
         lenient().when(sdkConfigurationSerializer.serialize(any()))
                 .thenAnswer(inv -> realSerializer.serialize(inv.getArgument(0)));
     }

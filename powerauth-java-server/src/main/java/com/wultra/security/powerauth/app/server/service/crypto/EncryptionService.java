@@ -162,15 +162,10 @@ public abstract class EncryptionService {
      * @throws EncryptorException In case of invalid request parameters.
      */
     protected void validateEncryptedRequest(EncryptedRequest encryptedRequest, String protocolVersion, boolean validateRequestData) throws GenericServiceException, EncryptorException {
-        // Validate encrypted request (with request data)
+        // Validate encrypted request (with request data); the validator requires encryptedData to be present,
+        // so it can only be called when request data is expected.
         if (validateRequestData && !ENCRYPTOR_FACTORY.getRequestResponseValidator(protocolVersion).validateEncryptedRequest(encryptedRequest)) {
             logger.warn("Invalid encrypted request parameters (with request data)");
-            // Rollback is not required, error occurs before writing to database
-            throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_REQUEST);
-        }
-        // Validate encrypted request (without request data)
-        if (!validateRequestData && !ENCRYPTOR_FACTORY.getRequestResponseValidator(protocolVersion).validateEncryptedRequest(encryptedRequest)) {
-            logger.warn("Invalid encrypted request parameters (without request data)");
             // Rollback is not required, error occurs before writing to database
             throw localizationProvider.buildExceptionForCode(ServiceError.INVALID_REQUEST);
         }
