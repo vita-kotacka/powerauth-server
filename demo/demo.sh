@@ -156,7 +156,7 @@ CREATE_RESPONSE=$(curl -s -X POST \
     -H "X-Correlation-ID: $CORRELATION_ID" \
     -d '{"requestObject":{"applicationId":"demo-app"}}')
 echo "$CREATE_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$CREATE_RESPONSE"
-if echo "$CREATE_RESPONSE" | grep -q '"status":"OK"'; then
+if echo "$CREATE_RESPONSE" | grep -qE '"status"\s*:\s*"OK"'; then
     success "Application created"
 elif echo "$CREATE_RESPONSE" | grep -q 'ERR0043'; then
     success "Application already exists — skipping create"
@@ -172,7 +172,7 @@ DETAIL_RESPONSE=$(curl -s -X POST \
     -H "X-Correlation-ID: $CORRELATION_ID" \
     -d '{"requestObject":{"applicationId":"demo-app"}}')
 echo "$DETAIL_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$DETAIL_RESPONSE"
-echo "$DETAIL_RESPONSE" | grep -q '"status":"OK"' && success "Application detail retrieved" || { error "Failed to get application detail"; exit 1; }
+echo "$DETAIL_RESPONSE" | grep -qE '"status"\s*:\s*"OK"' && success "Application detail retrieved" || { error "Failed to get application detail"; exit 1; }
 
 info "Step 3/3 — List all applications"
 LIST_RESPONSE=$(curl -s -X POST \
@@ -181,7 +181,7 @@ LIST_RESPONSE=$(curl -s -X POST \
     -H "X-Correlation-ID: $CORRELATION_ID" \
     -d '{}')
 echo "$LIST_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$LIST_RESPONSE"
-echo "$LIST_RESPONSE" | grep -q '"status":"OK"' && success "Application list retrieved" || { error "Failed to list applications"; exit 1; }
+echo "$LIST_RESPONSE" | grep -qE '"status"\s*:\s*"OK"' && success "Application list retrieved" || { error "Failed to list applications"; exit 1; }
 
 # ── 7. Summary ────────────────────────────────────────────────────────────────
 header "Demo complete — Grafana URLs"
