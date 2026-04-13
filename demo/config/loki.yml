@@ -3,9 +3,17 @@ auth_enabled: false
 server:
   http_listen_port: 3100
 
+common:
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
 ingester:
   chunk_idle_period: 5m
   chunk_retain_period: 30s
+  wal:
+    dir: /loki/wal
 
 schema_config:
   configs:
