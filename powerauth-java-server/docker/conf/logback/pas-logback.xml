@@ -4,6 +4,7 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <omitEmptyFields>true</omitEmptyFields>
             <includeMdc>true</includeMdc>
             <customFields>{"appname":"${appname}"}</customFields>
             <mdcKeyFieldName>traceId=trace_id</mdcKeyFieldName>

@@ -127,7 +127,7 @@ public class ApplicationServiceBehavior {
     @Transactional
     public GetApplicationListResponse getApplicationList() throws GenericServiceException {
         try {
-            logger.info("action=getApplicationList, state=initiated");
+            logger.info("", kv("action", "getApplicationList"), kv("state", "initiated"));
             final Iterable<ApplicationEntity> result = applicationRepository.findAll();
 
             final GetApplicationListResponse response = new GetApplicationListResponse();
@@ -139,7 +139,7 @@ public class ApplicationServiceBehavior {
                 response.getApplications().add(app);
             }
 
-            logger.info("action=getApplicationList, state=succeeded", kv("count", response.getApplications().size()));
+            logger.info("", kv("action", "getApplicationList"), kv("state", "succeeded"), kv("count", response.getApplications().size()));
             return response;
         } catch (RuntimeException ex) {
             logger.error("Runtime exception or error occurred, transaction will be rolled back", ex);
@@ -162,7 +162,7 @@ public class ApplicationServiceBehavior {
         try {
             final String applicationId = request.getApplicationId();
 
-            logger.info("action=createApplication, state=initiated", kv("applicationId", applicationId));
+            logger.info("", kv("action", "createApplication"), kv("state", "initiated"), kv("applicationId", applicationId));
 
             final Span span = tracer.nextSpan().name("createApplication").start();
             try (Tracer.SpanInScope ignored = tracer.withSpan(span.tag("applicationId", applicationId))) {
@@ -217,7 +217,7 @@ public class ApplicationServiceBehavior {
             response.getVersions().add(ver);
 
             applicationsCreatedCounter.increment();
-            logger.info("action=createApplication, state=succeeded", kv("applicationId", application.getId()));
+            logger.info("", kv("action", "createApplication"), kv("state", "succeeded"), kv("applicationId", application.getId()));
             span.tag("state", "succeeded");
             return response;
 

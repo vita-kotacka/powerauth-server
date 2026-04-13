@@ -51,7 +51,9 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             final long durationMs = System.currentTimeMillis() - startTime;
-            logger.info("action=http_request, state=completed",
+            logger.info("",
+                    kv("action", "http_request"),
+                    kv("state", "completed"),
                     kv("method", request.getMethod()),
                     kv("path", request.getRequestURI()),
                     kv("status", response.getStatus()),
