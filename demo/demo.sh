@@ -92,7 +92,7 @@ if ! $SKIP_BUILD; then
     success "Build complete"
 
     mkdir -p "$WAR_DEST"
-    cp "$REPO_ROOT/powerauth-java-server/target/powerauth-java-server.war" "$WAR_DEST/"
+    cp "$REPO_ROOT"/powerauth-java-server/target/powerauth-java-server*.war "$WAR_DEST/powerauth-java-server.war"
     success "WAR copied to $WAR_DEST"
 else
     warn "--skip-build: skipping Maven build"
