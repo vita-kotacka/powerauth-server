@@ -150,31 +150,38 @@ success "PowerAuth Server is UP"
 header "Running API demo (X-Correlation-ID: $CORRELATION_ID)"
 
 info "Step 1/3 — Create application 'demo-app'"
-CREATE_RESPONSE=$(curl -sf -X POST \
+CREATE_RESPONSE=$(curl -s -X POST \
     "$PAS_BASE_URL/rest/v4/application/create" \
     -H "Content-Type: application/json" \
     -H "X-Correlation-ID: $CORRELATION_ID" \
     -d '{"requestObject":{"applicationId":"demo-app"}}')
 echo "$CREATE_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$CREATE_RESPONSE"
-success "Application created"
+if echo "$CREATE_RESPONSE" | grep -q '"status":"OK"'; then
+    success "Application created"
+elif echo "$CREATE_RESPONSE" | grep -q 'ERR0043'; then
+    success "Application already exists — skipping create"
+else
+    error "Unexpected response from create application"
+    exit 1
+fi
 
 info "Step 2/3 — Get application detail"
-DETAIL_RESPONSE=$(curl -sf -X POST \
+DETAIL_RESPONSE=$(curl -s -X POST \
     "$PAS_BASE_URL/rest/v4/application/detail" \
     -H "Content-Type: application/json" \
     -H "X-Correlation-ID: $CORRELATION_ID" \
     -d '{"requestObject":{"applicationId":"demo-app"}}')
 echo "$DETAIL_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$DETAIL_RESPONSE"
-success "Application detail retrieved"
+echo "$DETAIL_RESPONSE" | grep -q '"status":"OK"' && success "Application detail retrieved" || { error "Failed to get application detail"; exit 1; }
 
 info "Step 3/3 — List all applications"
-LIST_RESPONSE=$(curl -sf -X POST \
+LIST_RESPONSE=$(curl -s -X POST \
     "$PAS_BASE_URL/rest/v4/application/list" \
     -H "Content-Type: application/json" \
     -H "X-Correlation-ID: $CORRELATION_ID" \
     -d '{}')
 echo "$LIST_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$LIST_RESPONSE"
-success "Application list retrieved"
+echo "$LIST_RESPONSE" | grep -q '"status":"OK"' && success "Application list retrieved" || { error "Failed to list applications"; exit 1; }
 
 # ── 7. Summary ────────────────────────────────────────────────────────────────
 header "Demo complete — Grafana URLs"
